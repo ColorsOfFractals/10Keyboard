@@ -17,7 +17,7 @@ MAP = {'7': 'ABC', '8': 'DEF', '9': 'GHI', '4': 'JKL', '5': 'MNO', '6': 'PQRS', 
 class KeyboardApp:
     def __init__(self, root):
         self.root = root
-        root.title('10Keyboard | Ring 0.8.0')
+        root.title('10Keyboard | v1.0.0')
         # Distinguish 10Keyboard from generic Python.
         if sys.platform == 'win32':
             import ctypes
@@ -26,8 +26,11 @@ class KeyboardApp:
             )
 
         # Native Windows icon for title bar and taskbar.
-        icon_path = Path(__file__).resolve().parent / 'assets' / '10Keyboard.ico'
-
+        # Resolve resources in both Python and PyInstaller builds.
+        bundle_dir = Path(
+            getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)
+        )
+        icon_path = bundle_dir / "assets" / "10Keyboard.ico"
         if icon_path.is_file():
             root.iconbitmap(default=str(icon_path))
 
@@ -515,9 +518,21 @@ class KeyboardApp:
             }
         }
 
-        self.settings_path = (
+        # Store preferences outside the PyInstaller bundle.
+        # Preserve the existing development settings on first migration.
+        import os
+        settings_dir = Path(
+            os.environ.get('LOCALAPPDATA', str(Path.home()))
+        ) / '10Keyboard'
+        settings_dir.mkdir(parents=True, exist_ok=True)
+        self.settings_path = settings_dir / '10keyboard_settings.json'
+
+        legacy_settings = (
             Path(__file__).resolve().parent / '10keyboard_settings.json'
         )
+        if not self.settings_path.exists() and legacy_settings.is_file():
+            import shutil
+            shutil.copy2(legacy_settings, self.settings_path)
         saved = 'Cyberdeck'
         try:
             data = json.loads(self.settings_path.read_text(
