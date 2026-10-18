@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.bak
+*.bak.*
+*.spec
+build/
+dist/
+.venv/
+venv/
+10keyboard_settings.json
+*.tmp
+*.log
